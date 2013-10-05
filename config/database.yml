@@ -1,0 +1,21 @@
+development:
+  adapter: postgresql
+  encoding: utf8
+  reconnect: false
+  database: tumblebot_development
+  pool: 5
+  host: localhost
+  username: sarahashraf
+  password: princess
+  min_messages: warning
+
+test:
+  adapter: postgresql
+  encoding: utf8
+  reconnect: false
+  database: tumblebot_test
+  pool: 5
+  host: localhost
+  username: sarahashraf
+  password: princess
+  min_messages: warning

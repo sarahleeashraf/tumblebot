@@ -10,19 +10,56 @@ class BlogsController < ApplicationController
   def show
   end
 
+  def authorize
+    key = TumblrConfig.consumer_key
+    secret = TumblrConfig.consumer_secret
+    site = TumblrConfig.site
+
+    consumer = OAuth::Consumer.new(key, secret,
+                                   { :site => site,
+                                     :request_token_path => '/oauth/request_token',
+                                     :authorize_path => '/oauth/authorize',
+                                     :access_token_path => '/oauth/access_token',
+                                     :http_method => :post } )
+
+    request_token = consumer.get_request_token(oauth_callback: new_blog_url)
+    session[:request_token] = request_token
+
+    #2. have the user authorize
+    redirect_to request_token.authorize_url
+  end
+
   # GET /blogs/new
   def new
-    @blog = Blog.new
+    return redirect_to authorize_blogs_url if session[:request_token].nil?
+
+    begin
+      @access_token = session[:request_token].get_access_token(oauth_verifier: params[:oauth_verifier])
+    rescue => e
+      flash[:error] = e.to_s
+      return
+    end
+
+
+    @blog = Blog.new(
+        access_token: @access_token.token,
+        access_token_secret: @access_token.secret,
+    )
+
+    user_info = @blog.tumblr_client.info['user']
+
+    @blog.user_name = user_info['name']
   end
+
 
   # GET /blogs/1/edit
   def edit
   end
 
+
   # POST /blogs
   def create
     @blog = Blog.new(blog_params)
-
     if @blog.save
       redirect_to @blog, notice: 'Blog was successfully created.'
     else
@@ -53,6 +90,6 @@ class BlogsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def blog_params
-      params.require(:blog).permit(:name, :hostname, :access_token, :access_token_secret)
+      params.require(:blog).permit(:user_name, :hostname, :access_token, :access_token_secret)
     end
 end

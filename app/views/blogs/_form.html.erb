@@ -12,20 +12,20 @@
   <% end %>
 
   <div class="field">
-    <%= f.label :name %><br>
-    <%= f.text_field :name %>
+    <%= f.label :user_name %><br>
+    <%= f.text_field :user_name, readonly: true %>
   </div>
   <div class="field">
     <%= f.label :hostname %><br>
-    <%= f.text_field :hostname %>
+    <%= f.select :hostname, f.object.users_other_blogs %>
   </div>
   <div class="field">
     <%= f.label :access_token %><br>
-    <%= f.text_field :access_token %>
+    <%= f.text_field :access_token, readonly: true %>
   </div>
   <div class="field">
     <%= f.label :access_token_secret %><br>
-    <%= f.text_field :access_token_secret %>
+    <%= f.text_field :access_token_secret, readonly: true %>
   </div>
   <div class="actions">
     <%= f.submit %>

@@ -20,7 +20,12 @@ gem 'oauth'
 group :test do
   gem 'rspec'
   gem 'rspec-rails'
+  gem 'rspec-mocks'
   gem 'shoulda'
   gem 'factory_girl'
+  gem 'webmock'
+  gem 'capybara'
+  gem 'launchy'
+  gem 'simplecov'
 end
 

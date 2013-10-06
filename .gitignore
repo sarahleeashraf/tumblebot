@@ -14,4 +14,5 @@ capybara-*.html
 /.idea/*
 **.orig
 rerun.txt
-pickle-email-*.html
+pickle-email-*.htm
+.DS_Store

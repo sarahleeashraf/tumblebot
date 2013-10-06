@@ -3,10 +3,8 @@
 <table>
   <thead>
     <tr>
-      <th>Name</th>
+      <th>User Name</th>
       <th>Hostname</th>
-      <th>Access token</th>
-      <th>Access token secret</th>
       <th></th>
       <th></th>
       <th></th>
@@ -16,10 +14,8 @@
   <tbody>
     <% @blogs.each do |blog| %>
       <tr>
-        <td><%= blog.name %></td>
+        <td><%= blog.user_name %></td>
         <td><%= blog.hostname %></td>
-        <td><%= blog.access_token %></td>
-        <td><%= blog.access_token_secret %></td>
         <td><%= link_to 'Show', blog %></td>
         <td><%= link_to 'Edit', edit_blog_path(blog) %></td>
         <td><%= link_to 'Destroy', blog, method: :delete, data: { confirm: 'Are you sure?' } %></td>

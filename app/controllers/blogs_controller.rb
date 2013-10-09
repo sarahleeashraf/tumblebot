@@ -23,6 +23,9 @@ class BlogsController < ApplicationController
                                      :http_method => :post } )
 
     request_token = consumer.get_request_token(oauth_callback: new_blog_url)
+
+    logger.info request_token
+
     session[:request_token] = request_token
 
     #2. have the user authorize

@@ -69,6 +69,8 @@ class BlogsController < ApplicationController
 
   # PATCH/PUT /blogs/1
   def update
+    p blog_params
+
     if @blog.update(blog_params)
       redirect_to @blog, notice: 'Blog was successfully updated.'
     else
@@ -90,6 +92,6 @@ class BlogsController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def blog_params
-      params.require(:blog).permit(:user_name, :hostname, :access_token, :access_token_secret)
+      params.require(:blog).permit(:user_name, :hostname, :access_token, :access_token_secret, tags_attributes: [:value])
     end
 end

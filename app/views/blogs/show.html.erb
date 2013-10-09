@@ -20,5 +20,13 @@
   <%= @blog.access_token_secret %>
 </p>
 
+<p>Tags</p>
+
+<ul>
+  <% @blog.tags.each do |tag| %>
+    <li><%= tag.value %></li>
+  <% end %>
+</ul>
+
 <%= link_to 'Edit', edit_blog_path(@blog) %> |
 <%= link_to 'Back', blogs_path %>

@@ -1,9 +1,9 @@
 class Jobs::ReblogAndFollowTaggedPostsJob
   def perform
     Blog.all.each do |blog|
-
       blog.tags.each do |tag|
         posts = blog.get_tagged_posts(tag.value, 'photo')
+        posts = blog.remove_already_blogged_posts(posts)
         blog.reblog_posts posts
         blog.follow_post_users(posts)
         blog.clean_queue

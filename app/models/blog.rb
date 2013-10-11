@@ -58,6 +58,22 @@ class Blog < ActiveRecord::Base
     end
   end
 
+  def remove_already_blogged_posts(posts)
+    posts.collect do |post|
+      if post['note_count'] == 0
+        post
+      else
+        post unless reblogged_already?(post)
+      end
+    end.compact
+  end
+
+  def reblogged_already?(post)
+    options = {id: post['id'], notes_info: true, reblog_info: true}
+    notes = tumblr_client.posts(URI.parse(post['post_url']).hostname, options )['posts'].first['notes']
+    notes.collect{|note| URI.parse(note['blog_url']).hostname }.include? hostname
+  end
+
   def users_other_blogs
     tumblr_client.info['user']['blogs'].collect{|b| URI.parse(b['url']).hostname }
   end

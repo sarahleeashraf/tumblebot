@@ -1,16 +1,16 @@
 require 'spec_helper'
 
 describe Blog do
-  let(:blog) { FactoryGirl.build(:blog)}
+  let(:blog) { FactoryGirl.build(:blog) }
   describe "associations" do
-    it { should have_many :tags}
+    it { should have_many :tags }
   end
 
   describe "validations" do
     it { should validate_presence_of :user_name }
     it { should validate_presence_of :hostname }
     it { should validate_presence_of :access_token }
-    it { should validate_presence_of :access_token_secret}
+    it { should validate_presence_of :access_token_secret }
     it { should validate_uniqueness_of :hostname }
   end
 
@@ -37,7 +37,7 @@ describe Blog do
     context "when type is passed" do
       it "should filter out everything that doesn't have that type" do
         Tumblr::Client.any_instance.stub(:tagged).and_return([{'id' => 2345, 'type' => 'photo'}, {'id' => 4567, 'type' => 'text'}])
-        expect(blog.get_tagged_posts("tag",'photo')).to eq [{'id' => 2345, 'type' => 'photo'}]
+        expect(blog.get_tagged_posts("tag", 'photo')).to eq [{'id' => 2345, 'type' => 'photo'}]
       end
     end
   end
@@ -46,7 +46,7 @@ describe Blog do
     context 'when no options are passed' do
       it "should reblog the posts with the same tags" do
         Tumblr::Client.any_instance.should_receive(:reblog).with(blog.hostname, {id: 111, reblog_key: '123', state: 'queue', tags: ['tag']})
-        blog.reblog_posts([{id: 111, reblog_key: '123', state: 'queue', tags: ['tag'] }.stringify_keys])
+        blog.reblog_posts([{id: 111, reblog_key: '123', state: 'queue', tags: ['tag']}.stringify_keys])
       end
     end
 
@@ -60,6 +60,83 @@ describe Blog do
       Tumblr::Client.any_instance.should_receive(:follow).with('http://www.google.com')
 
       blog.follow_post_users([{'post_url' => 'http://www.google.com'}])
+    end
+  end
+
+  describe 'remove_already_blogged_posts' do
+    context "when the post has a note_count of zero" do
+      it "should keep it in the array" do
+        blog.stub(:reblogged_already?).and_return(true)
+        expect(blog.remove_already_blogged_posts([{'note_count' => 0}, {'note_count' => 99}])).to eq ['note_count' => 0]
+      end
+    end
+
+    context "when the blog as already been reblogged" do
+      it "should remove it from the array" do
+        blog.stub(:reblogged_already?).and_return(true)
+        expect(blog.remove_already_blogged_posts([{'note_count' => 99}])).to eq []
+      end
+    end
+
+    context "when the blog hasn't been reblogged" do
+      it "should leave it in the array" do
+        blog.stub(:reblogged_already?).and_return(false)
+        expect(blog.remove_already_blogged_posts([{'note_count' => 99}])).to eq [{'note_count' => 99}]
+
+      end
+    end
+  end
+
+  describe 'reblogged_already?' do
+    context "when this post has already been reblogged on this blog" do
+      it "should return true" do
+        post = {'id' => '1234567', 'post_url' => 'http://missingtheambitiousgene.tumblr.com/image/63684588512'}
+
+        blog.tumblr_client.should_receive(:posts).and_return(
+            "posts" => [{"notes" => [
+                {
+                    "timestamp" => "1381355826",
+                    "blog_name" => "vhuti",
+                    "blog_url" => "http://vhuti.tumblr.com/",
+                    "type" => "like"
+                },
+                {
+                    "timestamp" => "1381323665",
+                    "blog_name" => "vivaladiy",
+                    "blog_url" => "http://http://v3rsac3v3rsac3.tumblr.com",
+                    "post_id" => "63552713723",
+                    "type" => "reblog"
+                }]
+                        }]
+        )
+        expect(blog.reblogged_already?(post)).to eq false
+      end
+    end
+
+    context "when this post has not been reblogged on this blog" do
+      it "should return false" do
+        post = {'id' => '1234567', 'post_url' => 'http://missingtheambitiousgene.tumblr.com/image/63684588512'}
+
+        blog.tumblr_client.should_receive(:posts).and_return(
+            "posts" => [{"notes" => [
+                {
+                    "timestamp" => "1381355826",
+                    "blog_name" => "vhuti",
+                    "blog_url" => "http://vhuti.tumblr.com/",
+                    "type" => "like"
+                },
+                {
+                    "timestamp" => "1381323665",
+                    "blog_name" => "vivaladiy",
+                    "blog_url" => "http://vivaladiy.tumblr.com/",
+                    "post_id" => "63552713723",
+                    "type" => "reblog"
+                }]
+            }]
+        )
+        expect(blog.reblogged_already?(post)).to eq false
+
+      end
     end
   end
 end

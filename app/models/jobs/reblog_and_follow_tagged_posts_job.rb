@@ -14,7 +14,7 @@ class Jobs::ReblogAndFollowTaggedPostsJob
       end
     end
 
-    Delayed::Job.enqueue(Jobs::ReblogAndFollowTaggedPostsJob.new(true), 0, run_at: Time.now + 6.hours) if @requeue
+    Delayed::Job.enqueue(Jobs::ReblogAndFollowTaggedPostsJob.new(true), 0, Time.now + 6.hours) if @requeue
 
   end
 end

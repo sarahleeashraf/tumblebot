@@ -15,7 +15,7 @@ gem 'bcrypt-ruby', '~> 3.0.0'
 gem 'unicorn'
 gem 'tumblr_client'
 gem 'oauth'
-
+gem 'delayed_job_active_record'
 
 group :test do
   gem 'rspec'

@@ -16,9 +16,16 @@ describe BlogsController do
   end
 
   describe "update" do
-    it "should update the blog" do
+    before(:each){ page.driver.browser.basic_authorize('admin','password')}
+
+    it "should update the blog"
+    it "should not add duplicate tags" do
+      blog.tags << FactoryGirl.build(:tag)
+
       visit edit_blog_path(blog)
-      #save_and_open_page
+      save_and_open_page
+      click_button 'Update Blog'
+      save_and_open_page
     end
   end
 end

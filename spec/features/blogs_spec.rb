@@ -23,9 +23,8 @@ describe BlogsController do
       blog.tags << FactoryGirl.build(:tag)
 
       visit edit_blog_path(blog)
-      save_and_open_page
       click_button 'Update Blog'
-      save_and_open_page
+      expect(page).not_to have_content('giovanna battaglia giovanna battaglia')
     end
   end
 end

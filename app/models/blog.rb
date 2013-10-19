@@ -1,10 +1,13 @@
 class Blog < ActiveRecord::Base
   has_many :tags, inverse_of: :blog, dependent: :destroy
+  has_many :posts, inverse_of: :blog
 
   validates_presence_of :user_name, :hostname, :access_token, :access_token_secret
   validates_uniqueness_of :hostname
 
   accepts_nested_attributes_for :tags, reject_if: proc { |attributes| attributes['value'].blank? }, allow_destroy: true
+
+  class ReblogFailed < StandardError; end;
 
   def tumblr_client
     @tumblr_client ||= initialize_tumblr_client
@@ -16,6 +19,7 @@ class Blog < ActiveRecord::Base
     posts
   end
 
+  #this needs to move to tag model
   def get_tagged_posts_from_dashboard(tag, type: nil, count: 20)
     dashboard_since_id = since_id || 63069378767
     tagged_posts = []
@@ -54,7 +58,17 @@ class Blog < ActiveRecord::Base
   def reblog_posts(posts, options = {})
     posts.each do |post|
       params = {state: 'queue', tags: post['tags']}.merge(options)
-      tumblr_client.reblog(hostname, params.merge({id: post['id'], reblog_key: post['reblog_key']}))
+      reblog_post(post['id'], post['reblog_key'], params)
+    end
+  end
+
+  def reblog_post(id, reblog_key, params = {})
+    result = tumblr_client.reblog(hostname, params.merge({id: id, reblog_key: reblog_key}))
+
+    if !result['id'].nil?
+      self.posts.create(external_id: result['id'], reblog_key: reblog_key)
+    else
+      raise ReblogFailed.new result['error']
     end
   end
 
@@ -69,9 +83,7 @@ class Blog < ActiveRecord::Base
   end
 
   def reblogged_already?(post)
-    options = {id: post['id'], notes_info: true, reblog_info: true}
-    notes = tumblr_client.posts(URI.parse(post['post_url']).hostname, options )['posts'].first['notes']
-    notes.collect{|note| URI.parse(note['blog_url']).hostname }.include? hostname
+    posts.collect(&:reblog_key).include?(post['reblog_key'])
   end
 
   def users_other_blogs

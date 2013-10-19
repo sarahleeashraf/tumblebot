@@ -4,6 +4,7 @@ describe Blog do
   let(:blog) { FactoryGirl.build(:blog) }
   describe "associations" do
     it { should have_many :tags }
+    it { should have_many :posts}
   end
 
   describe "validations" do
@@ -55,6 +56,38 @@ describe Blog do
     end
   end
 
+  describe 'reblog post' do
+    let(:blog) { FactoryGirl.create(:blog)}
+
+    it 'should reblog post on tumblr' do
+      blog.tumblr_client.should_receive(:reblog).with(blog.hostname, id: 123, reblog_key: '123').and_return({'id' => 456})
+      blog.reblog_post(123, '123')
+    end
+
+    context "when the reblog is successful" do
+      it "should create a post" do
+        blog.tumblr_client.stub(:reblog).and_return({'id' => 456})
+        expect {
+          blog.reblog_post(123, '123')
+        }.to change { Post.count }.from(0).to(1)
+
+        expect(Post.last.external_id).to eq 456
+
+      end
+    end
+
+    context "when the reblog is not successful" do
+      it "should raise exception" do
+        blog.tumblr_client.stub(:reblog).and_return({"status"=>400, "msg"=>"Bad Request", "error"=>"Invalid id or reblog_key specified."})
+        expect {
+          blog.reblog_post(123, '123')
+        }.to raise_error(Blog::ReblogFailed)
+
+      end
+    end
+
+  end
+
   describe 'follow_post_users' do
     it "should follow the blogs of the posts" do
       Tumblr::Client.any_instance.should_receive(:follow).with('http://www.google.com')
@@ -90,50 +123,17 @@ describe Blog do
   describe 'reblogged_already?' do
     context "when this post has already been reblogged on this blog" do
       it "should return true" do
-        post = {'id' => '1234567', 'post_url' => 'http://missingtheambitiousgene.tumblr.com/image/63684588512'}
+        Post.create(blog: blog, external_id: 1234567, reblog_key: '12345')
+        post = {'id' => '1234567', 'post_url' => 'http://missingtheambitiousgene.tumblr.com/image/63684588512', 'reblog_key' => '12345'}
 
-        blog.tumblr_client.should_receive(:posts).and_return(
-            "posts" => [{"notes" => [
-                {
-                    "timestamp" => "1381355826",
-                    "blog_name" => "vhuti",
-                    "blog_url" => "http://vhuti.tumblr.com/",
-                    "type" => "like"
-                },
-                {
-                    "timestamp" => "1381323665",
-                    "blog_name" => "vivaladiy",
-                    "blog_url" => "http://http://v3rsac3v3rsac3.tumblr.com",
-                    "post_id" => "63552713723",
-                    "type" => "reblog"
-                }]
-                        }]
-        )
-        expect(blog.reblogged_already?(post)).to eq false
+        expect(blog.reblogged_already?(post)).to eq true
       end
     end
 
     context "when this post has not been reblogged on this blog" do
       it "should return false" do
-        post = {'id' => '1234567', 'post_url' => 'http://missingtheambitiousgene.tumblr.com/image/63684588512'}
+        post = {'id' => '1234567', 'post_url' => 'http://missingtheambitiousgene.tumblr.com/image/63684588512', 'reblog_key' => '12345'}
 
-        blog.tumblr_client.should_receive(:posts).and_return(
-            "posts" => [{"notes" => [
-                {
-                    "timestamp" => "1381355826",
-                    "blog_name" => "vhuti",
-                    "blog_url" => "http://vhuti.tumblr.com/",
-                    "type" => "like"
-                },
-                {
-                    "timestamp" => "1381323665",
-                    "blog_name" => "vivaladiy",
-                    "blog_url" => "http://vivaladiy.tumblr.com/",
-                    "post_id" => "63552713723",
-                    "type" => "reblog"
-                }]
-            }]
-        )
         expect(blog.reblogged_already?(post)).to eq false
 
       end

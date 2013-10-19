@@ -19,36 +19,6 @@ class Blog < ActiveRecord::Base
     posts
   end
 
-  #this needs to move to tag model
-  def get_tagged_posts_from_dashboard(tag, type: nil, count: 20)
-    dashboard_since_id = since_id || 63069378767
-    tagged_posts = []
-
-    dashboard_tags = {}
-    begin
-      dashboard_posts = tumblr_client.dashboard(since_id: dashboard_since_id)['posts']
-      dashboard_posts.each do |post|
-        post['tags'].each do |tag|
-          if dashboard_tags[tag].nil?
-            dashboard_tags[tag] = 1
-          else
-            dashboard_tags[tag] += 1
-          end
-        end
-
-        tagged_posts << post if post['tags'].include?(tag)
-      end
-
-
-      dashboard_since_id = dashboard_posts.last['id']
-
-    end while (tagged_posts.size < count and !dashboard_posts.empty?)
-
-    self.update_attributes(since_id: dashboard_since_id)
-    tagged_posts
-
-  end
-
   def follow_post_users(posts)
     posts.each do |post|
       tumblr_client.follow(post['post_url'])
@@ -74,15 +44,12 @@ class Blog < ActiveRecord::Base
 
   def remove_already_blogged_posts(posts)
     posts.collect do |post|
-      if post['note_count'] == 0
-        post
-      else
-        post unless reblogged_already?(post)
-      end
+      post unless reblogged_already?(post)
     end.compact
   end
 
   def reblogged_already?(post)
+    posts.reload
     posts.collect(&:reblog_key).include?(post['reblog_key'])
   end
 

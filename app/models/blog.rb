@@ -28,12 +28,14 @@ class Blog < ActiveRecord::Base
   def reblog_posts(posts, options = {})
     posts.each do |post|
       params = {state: 'queue', tags: post['tags']}.merge(options)
-      reblog_post(post['id'], post['reblog_key'], params)
+      reblog_post(post, params)
     end
   end
 
-  def reblog_post(id, reblog_key, params = {})
-    result = tumblr_client.reblog(hostname, params.merge({id: id, reblog_key: reblog_key}))
+  def reblog_post(post, params = {})
+    return if reblogged_already? post
+    result = tumblr_client.reblog(hostname, params.merge({id: post['id'], reblog_key: post['reblog_key']}))
+
 
     if !result['id'].nil?
       self.posts.create(external_id: result['id'], reblog_key: reblog_key)

@@ -38,7 +38,7 @@ class Blog < ActiveRecord::Base
 
 
     if !result['id'].nil?
-      self.posts.create(external_id: result['id'], reblog_key: reblog_key)
+      self.posts.create(external_id: result['id'], reblog_key: post['reblog_key'])
     else
       raise ReblogFailed.new result['error']
     end

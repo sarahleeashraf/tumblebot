@@ -1,6 +1,14 @@
 require 'spec_helper'
 
 describe BlogsController do
+  def http_login
+    user = 'admin'
+    pw = 'password'
+    request.env['HTTP_AUTHORIZATION'] = ActionController::HttpAuthentication::Basic.encode_credentials(user,pw)
+  end
+
+  before(:each){ http_login }
+
   describe 'authorize' do
     it 'should pass the correct redirect url to the oauth consumer' do
       OAuth::Consumer.any_instance.should_receive(:get_request_token).and_call_original

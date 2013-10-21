@@ -36,7 +36,6 @@ class Blog < ActiveRecord::Base
     return if reblogged_already? post
     result = tumblr_client.reblog(hostname, params.merge({id: post['id'], reblog_key: post['reblog_key']}))
 
-
     if !result['id'].nil?
       self.posts.create(external_id: result['id'], reblog_key: post['reblog_key'])
     else

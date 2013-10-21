@@ -44,9 +44,10 @@ describe Blog do
   end
 
   describe 'reblog_posts' do
+    let(:blog) { FactoryGirl.create(:blog)}
     context 'when no options are passed' do
       it "should reblog the posts with the same tags" do
-        Tumblr::Client.any_instance.should_receive(:reblog).with(blog.hostname, {id: 111, reblog_key: '123', state: 'queue', tags: ['tag']})
+        Tumblr::Client.any_instance.should_receive(:reblog).with(blog.hostname, {id: 111, reblog_key: '123', state: 'queue', tags: ['tag']}).and_return({'id' => 123})
         blog.reblog_posts([{id: 111, reblog_key: '123', state: 'queue', tags: ['tag']}.stringify_keys])
       end
     end
@@ -61,14 +62,14 @@ describe Blog do
 
     it 'should reblog post on tumblr' do
       blog.tumblr_client.should_receive(:reblog).with(blog.hostname, id: 123, reblog_key: '123').and_return({'id' => 456})
-      blog.reblog_post(123, '123')
+      blog.reblog_post({'id' => 123, 'reblog_key' => '123'})
     end
 
     context "when the reblog is successful" do
       it "should create a post" do
         blog.tumblr_client.stub(:reblog).and_return({'id' => 456})
         expect {
-          blog.reblog_post(123, '123')
+          blog.reblog_post({'id' => 123, 'reblog_key' => '123'})
         }.to change { Post.count }.from(0).to(1)
 
         expect(Post.last.external_id).to eq 456
@@ -80,7 +81,7 @@ describe Blog do
       it "should raise exception" do
         blog.tumblr_client.stub(:reblog).and_return({"status"=>400, "msg"=>"Bad Request", "error"=>"Invalid id or reblog_key specified."})
         expect {
-          blog.reblog_post(123, '123')
+          blog.reblog_post({'id' => 123, 'reblog_key' => '123'})
         }.to raise_error(Blog::ReblogFailed)
 
       end
@@ -97,13 +98,6 @@ describe Blog do
   end
 
   describe 'remove_already_blogged_posts' do
-    context "when the post has a note_count of zero" do
-      it "should keep it in the array" do
-        blog.stub(:reblogged_already?).and_return(true)
-        expect(blog.remove_already_blogged_posts([{'note_count' => 0}, {'note_count' => 99}])).to eq ['note_count' => 0]
-      end
-    end
-
     context "when the blog as already been reblogged" do
       it "should remove it from the array" do
         blog.stub(:reblogged_already?).and_return(true)

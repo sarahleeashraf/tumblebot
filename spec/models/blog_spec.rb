@@ -47,8 +47,8 @@ describe Blog do
     let(:blog) { FactoryGirl.create(:blog)}
     context 'when no options are passed' do
       it "should reblog the posts with the same tags" do
-        Tumblr::Client.any_instance.should_receive(:reblog).with(blog.hostname, {id: 111, reblog_key: '123', state: 'queue', tags: ['tag']}).and_return({'id' => 123})
-        blog.reblog_posts([{id: 111, reblog_key: '123', state: 'queue', tags: ['tag']}.stringify_keys])
+        Tumblr::Client.any_instance.should_receive(:reblog).with(blog.hostname, {id: 111, reblog_key: '123', state: 'queue?limit=20&offset=0', tags: ['tag']}).and_return({'id' => 123})
+        blog.reblog_posts([{id: 111, reblog_key: '123', state: 'queue?limit=20&offset=0', tags: ['tag']}.stringify_keys])
       end
     end
 
@@ -131,6 +131,14 @@ describe Blog do
         expect(blog.reblogged_already?(post)).to eq false
 
       end
+    end
+  end
+
+  describe 'clean_queue' do
+    it "should edit the post with the passed caption" do
+      blog.tumblr_client.should_receive(:edit).with(blog.hostname, {id: 61748593713, caption: 'hello_world'})
+
+      blog.clean_queue(caption: 'hello_world')
     end
   end
 end

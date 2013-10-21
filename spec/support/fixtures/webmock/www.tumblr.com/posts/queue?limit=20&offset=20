@@ -1,0 +1,9 @@
+{
+    "meta": {
+        "status": 200,
+        "msg": "OK"
+    },
+    "response": {
+        "posts": []
+    }
+}

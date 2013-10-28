@@ -50,5 +50,12 @@ module WebmockStubs
 
       WebMock.stub_request(:get, url).to_return({status: 200, headers: {'Content-Type' => 'application/json'}, body: body})
     end
+
+    def stub_tumblr_dashboard_page3
+      url = 'http://api.tumblr.com/v2/user/dashboard?since_id=65276229800'
+      body = File.new "#{::Rails.root}/spec/support/fixtures/webmock/www.tumblr.com/user/dashboard?since_id=65276229800"
+
+      WebMock.stub_request(:get, url).to_return({status: 200, headers: {'Content-Type' => 'application/json'}, body: body})
+    end
   end
 end

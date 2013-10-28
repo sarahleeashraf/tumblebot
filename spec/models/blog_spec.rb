@@ -144,8 +144,12 @@ describe Blog do
 
   describe 'reblog_tagged_posts_from_dashboard' do
     let(:blog) { FactoryGirl.create(:blog)}
-    context "when a type is passed" do
 
+    it "should update the since id on the blog for every loop" do
+      expect(blog).to receive(:update_attributes).with(since_id: 65276229696)
+      expect(blog).to receive(:update_attributes).with(since_id: 65276229800)
+
+      blog.reblog_tagged_posts_from_dashboard
     end
 
     context "when the post has one of the blog's tags" do
@@ -160,7 +164,7 @@ describe Blog do
         end
 
         it "should not count as one of the reblogged posts" do
-          blog.tumblr_client.should_receive(:dashboard).twice.and_call_original
+          blog.tumblr_client.should_receive(:dashboard).exactly(3).times.and_call_original
           blog.reblog_tagged_posts_from_dashboard(1)
         end
       end

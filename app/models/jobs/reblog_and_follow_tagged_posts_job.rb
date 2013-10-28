@@ -9,14 +9,7 @@ class Jobs::ReblogAndFollowTaggedPostsJob
         posts = blog.get_tagged_posts(tag.value, 'photo')
         blog.follow_post_users(posts)
         blog.reblog_posts posts
-
-        if blog.tumblr_client.info['user']['following'] > 100
-          blog.tags.each do |tag|
-            posts = tag.get_tagged_posts_from_dashboard
-            blog.reblog_posts posts
-          end
-        end
-
+        blog.reblog_tagged_posts_from_dashboard if blog.tumblr_client.info['user']['following'] > 100
         blog.clean_queue
       end
     end

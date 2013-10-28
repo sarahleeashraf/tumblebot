@@ -71,6 +71,44 @@ class Blog < ActiveRecord::Base
     end while !posts_to_clean.empty?
   end
 
+  def reblog_tagged_posts_from_dashboard(number_of_posts = 50, options = {})
+    dashboard_since_id = since_id || 1
+    count = 0
+
+    begin
+      params = options.merge(since_id: dashboard_since_id)
+      response = tumblr_client.dashboard(params)
+      break if response['posts'].empty?
+
+      tagged_posts = []
+
+      dashboard_posts = response['posts']
+
+      dashboard_posts.each do |post|
+
+        logger.info post['post_url']
+        logger.info post['tags']
+        logger.info post['date']
+
+        tags.each do |tag|
+          tagged_posts << post if post['tags'].include?(tag.value) and !reblogged_already? post
+        end
+      end
+
+      logger.info tagged_posts
+      reblog_posts(tagged_posts)
+      count += tagged_posts.size
+
+      logger.info "TOTAL POSTS REBLOGGED: #{count}"
+      dashboard_since_id = dashboard_posts.first['id']
+
+      self.update_attributes(since_id: dashboard_since_id)
+
+    end while(count < number_of_posts and !dashboard_posts.empty?)
+
+  end
+
+
   private
 
   def initialize_tumblr_client

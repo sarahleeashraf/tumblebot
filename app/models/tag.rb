@@ -3,7 +3,6 @@ class Tag < ActiveRecord::Base
 
   validates_presence_of :blog, :value
 
-  #this needs to move to tag model
   def get_tagged_posts_from_dashboard(count = 20)
     dashboard_since_id = since_id || 1
     tagged_posts = []

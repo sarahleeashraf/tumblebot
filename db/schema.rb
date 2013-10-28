@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20131019192951) do
+ActiveRecord::Schema.define(version: 20131022012229) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -35,7 +35,7 @@ ActiveRecord::Schema.define(version: 20131019192951) do
     t.datetime "locked_at"
     t.datetime "failed_at"
     t.string   "locked_by"
-    t.string   "queue?limit=20&offset=0"
+    t.string   "queue"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -56,6 +56,7 @@ ActiveRecord::Schema.define(version: 20131019192951) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.integer  "since_id",   limit: 8
+    t.boolean  "exclude"
   end
 
 end

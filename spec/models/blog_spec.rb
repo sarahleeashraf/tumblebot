@@ -47,8 +47,8 @@ describe Blog do
     let(:blog) { FactoryGirl.create(:blog)}
     context 'when no options are passed' do
       it "should reblog the posts with the same tags" do
-        Tumblr::Client.any_instance.should_receive(:reblog).with(blog.hostname, {id: 111, reblog_key: '123', state: 'queue?limit=20&offset=0', tags: ['tag']}).and_return({'id' => 123})
-        blog.reblog_posts([{id: 111, reblog_key: '123', state: 'queue?limit=20&offset=0', tags: ['tag']}.stringify_keys])
+        Tumblr::Client.any_instance.should_receive(:reblog).with(blog.hostname, {id: 111, reblog_key: '123', state: 'queue', tags: ['tag']}).and_return({'id' => 123})
+        blog.reblog_posts([{id: 111, reblog_key: '123', state: 'queue', tags: ['tag']}.stringify_keys])
       end
     end
 
@@ -139,6 +139,51 @@ describe Blog do
       blog.tumblr_client.should_receive(:edit).with(blog.hostname, {id: 61748593713, caption: 'hello_world'})
 
       blog.clean_queue(caption: 'hello_world')
+    end
+  end
+
+  describe 'reblog_tagged_posts_from_dashboard' do
+    let(:blog) { FactoryGirl.create(:blog)}
+    context "when a type is passed" do
+
+    end
+
+    context "when the post has one of the blog's tags" do
+      before(:each){ blog.tags.create(value: 'Miu Miu') }
+
+      context "when the post has already been reblogged" do
+        before(:each){blog.posts.create(external_id: 1, reblog_key: 'uICFuSOo')}
+
+        it "should not reblog the post" do
+          blog.tumblr_client.should_not_receive(:reblog)
+          blog.reblog_tagged_posts_from_dashboard
+        end
+
+        it "should not count as one of the reblogged posts" do
+          blog.tumblr_client.should_receive(:dashboard).twice.and_call_original
+          blog.reblog_tagged_posts_from_dashboard(1)
+        end
+      end
+
+      context "when the post hasn't been reblogged already" do
+        it "should reblog the post" do
+          blog.tumblr_client.should_receive(:reblog).with('versace.tumblr.com', id: 65276094097, reblog_key: 'uICFuSOo', tags: ["Fashion", "Miu Miu", "Runway", "Details"], state: 'queue').and_return('id' => 10)
+          blog.reblog_tagged_posts_from_dashboard
+        end
+
+        it "should reblog the number of posts passed" do
+          blog.tumblr_client.stub(:reblog).and_return('id' => 10)
+          blog.tumblr_client.should_receive(:dashboard).once.and_call_original
+          blog.reblog_tagged_posts_from_dashboard(1)
+        end
+      end
+    end
+
+    context "when the post doesn't have one of the blog tags" do
+      it "should not reblog" do
+        blog.should_not_receive(:reblog)
+        blog.reblog_tagged_posts_from_dashboard
+      end
     end
   end
 end
